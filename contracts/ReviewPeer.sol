@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
+import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@opengsn/contracts/src/ERC2771Recipient.sol";
 import "./IERC20Permit.sol";
 
-contract ReviewPeer is AccessControl {
+contract ReviewPeer is AccessControl, ERC2771Recipient {
 
     /*
     * @dev Review structure
@@ -15,27 +17,28 @@ contract ReviewPeer is AccessControl {
         uint256 starts; //change to the small number since here is only (1-5)
     }
 
-    bytes32 public constant PEER_REVIEW = keccak256("PEER_REVIEW");
-    
+    bytes32 public constant GRANT_REVIEW_ROLE = keccak256("GRANT_REVIEW_ROLE");
+
     mapping(address => bool) public allowedReviews;
     mapping(uint => Review) public reviews;
     uint256 public numReviews;
     uint256 public totalReviewScore;
 
-    constructor(){
+    constructor(address trustedForwarder){
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _setTrustedForwarder(trustedForwarder);
     }
 
-    function grantReview(address reviewerAddress) public returns(bool) {
+    function grantReview(address reviewerAddress) public returns(bool) { // add here an isAllowed validation 
         allowedReviews[reviewerAddress] = true;
         return true;
     }
 
-    function sendReview(uint256 starts) public returns(bool) { // add here an isAllowed validation 
+    function sendReview(uint256 starts) public returns(bool) { 
         require(starts > 0 && starts < 6, "not valid review");
-        require(allowedReviews[msg.sender] == true, "not allowed to review");
-        allowedReviews[msg.sender] = false;
-        Review memory review = Review(msg.sender, starts);
+        require(allowedReviews[_msgSender()] == true, "not allowed to review");
+        allowedReviews[_msgSender()] = false;
+        Review memory review = Review(_msgSender(), starts);
         reviews[numReviews] = review;
         numReviews++;
         totalReviewScore = totalReviewScore + starts;
@@ -63,5 +66,21 @@ contract ReviewPeer is AccessControl {
             rvs[i] = reviews[i];
         }
         return rvs;
+    }
+    
+    function _msgData() internal view override(ERC2771Recipient, Context) returns (bytes calldata) {
+        if (msg.sender == getTrustedForwarder()) {
+            return ERC2771Recipient._msgData();
+        } else {
+            return super._msgData();
+        }
+    }
+
+    function _msgSender() internal view override(ERC2771Recipient, Context) returns (address) {
+        if (msg.sender == getTrustedForwarder()) {
+            return ERC2771Recipient._msgSender();
+        } else {
+            return super._msgSender();
+        }
     }
 }

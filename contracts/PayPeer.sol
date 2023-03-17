@@ -8,15 +8,15 @@ import "./IReviewPeer.sol";
 
 contract PayPeer is AccessControl {
 
+    event Paid(address indexed sender, address indexed receiver, uint256 amount, address indexed token, uint256 serviceFee);
+    event Withdraw(address indexed receiver, address indexed token, uint256 amount);
+
     IReviewPeer reviewPeer;
 
     constructor(address reviewPeerAddress) {
         reviewPeer = IReviewPeer(reviewPeerAddress);
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
-
-    event Paid(address indexed sender, address indexed receiver, uint256 amount, address indexed token, uint256 serviceFee);
-    event Withdraw(address indexed receiver, address indexed token, uint256 amount);
 
     function pay(address payable to, address tokenAddress, uint256 amountToPay) public {
         require((amountToPay / 10000) * 10000 == amountToPay, 'too small amount');

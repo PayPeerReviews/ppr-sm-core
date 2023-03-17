@@ -28,6 +28,7 @@
     "typescript": ">=4.5.0"
   },
   "dependencies": {
+    "@opengsn/contracts": "^3.0.0-beta.6",
     "@openzeppelin/contracts": "^4.8.2"
   }
 }
