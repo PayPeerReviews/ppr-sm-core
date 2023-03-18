@@ -11,9 +11,9 @@ Goerli
 - PayPeer with fowarder = 0x424832D0609DB848F70318a0747718b6B16dBb7f
 
 Gnosis
-- ReviewPeer = 
+- ReviewPeer = NA
 - PayPeerCoin = 0x071ae68E6ECCC1d11Aa9c3746538e855826a788A
-- PayPeer = 
+- PayPeer = NA
 
 **Getting Started**
 
